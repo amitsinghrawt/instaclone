@@ -10,7 +10,11 @@ from imgurpython import ImgurClient
 from settings import BASE_DIR
 
 from forms import SignUpFrom, LoginFrom, PostFrom, LikeFrom,CommentFrom
-from models import UserModel, Seccion_token, LikeModel, PostModel,CommentModel
+from models import UserModel, Seccion_token, LikeModel, PostModel,CommentModel,swachh_bharat
+from clarifai.rest import ClarifaiApp
+
+dirty_list=['garbage','waste','polluttion','junk','trash','litter','disposal']
+CLARIFY_KEY='be172b9581264b87a0761d85e2a4597e'
 
 
 def signup_view(request):
@@ -32,6 +36,7 @@ def signup_view(request):
             return render(request, 'success.html') # return redirect('login/')
         else:
             print "worng username"
+            return render(request,"index.html")
     elif(request.method=="GET"):
             form = SignUpFrom()
             return render(request, 'index.html', {'form': form})
@@ -56,9 +61,9 @@ def Login_view(request):
                 else:
                     response_data['message'] = 'Incorrect Password! Please try again!'
             else:
-                print "incorrect Username"
-        else:
-            print"keep login"
+
+                return render(request, 'login.html')
+
     elif request.method == 'GET':
         form = LoginFrom()
         response_data['form'] = form
@@ -97,6 +102,7 @@ def post_view(request):
                 post.save()
                 client = ImgurClient("e86df9c6155435d", "b2d3db1d4409ce0edf07cf05d46eda64af25ac08")
                 post.image_url = client.upload_from_path(path, anon=True)['link']
+                swachh_bharat(post)
                 post.save()
 
                 return render(request, 'post.html', {'form': form, 'user': user})
@@ -168,3 +174,26 @@ def logout_view(request):
             return redirect("/login/")
         else:
             return redirect('/feeds/')
+def swachh_bharat(post):
+    app = ClarifaiApp(api_key=CLARIFY_KEY)
+    model = app.models.get('general-v1.3')
+    response = model.predict_by_url(url=post.image_url)
+
+    if response["status"]["code"] == 10000:
+        if response["outputs"]:
+            if response["outputs"][0]["data"]:
+                if response["outputs"][0]["data"]["concepts"]:
+                    for index in range(0, len(response["outputs"][0]["data"]["concepts"])):
+                        if response["outputs"][0]["data"]["concepts"][index]["name"] in dirty_list:
+                            category = swachh_bharat(post=post,text=response["outputs"][0]["data"]["concepts"][index]["name"])
+                            category.save()
+                        else:
+                            pass
+                else:
+                    print "No Concepts List Found"
+            else:
+                print "No Data List Found"
+        else:
+            print "No Outputs List Found"
+    else:
+        print "Response Code Error"

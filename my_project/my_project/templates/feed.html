@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Feed</title>
+    <title>feed</title>
 </head>
 <body>
  <form method="post" action="/post/">
@@ -57,9 +57,9 @@
               {% csrf_token %}
               <input type="hidden" name="comment" value="{{ comment.id }}" />
                 {% if comment.has_liked %}
-                <input type="submit" class="btn btn-default" value="Unlike">
+                <input type="submit" class="kuch bi" value="Unlike">
                 {% else %}
-                <input type="submit" class="btn btn-default" value="Like">
+                <input type="submit" class="kuch bi" value="Like">
                 {% endif %}
             </form>
             {% endfor %}

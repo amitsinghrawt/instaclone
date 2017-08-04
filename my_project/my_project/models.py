@@ -16,7 +16,7 @@ class UserModel(models.Model):
       # updated-on field
     updated_on = models.DateTimeField(auto_now=True)
 
-class Seccion_token():
+class Seccion_token(models.Model):
     user = models.ForeignKey(UserModel)
     session_token = models.CharField(max_length=255)
     last_request_on = models.DateTimeField(auto_now=True)
@@ -58,3 +58,7 @@ class CommentModel(models.Model):
         comment_text = models.CharField(max_length=555)
         created_on = models.DateTimeField(auto_now_add=True)
         updated_on = models.DateTimeField(auto_now=True)
+
+class swachh_bharat(models.Model):
+        post = models.ForeignKey(PostModel)
+        text = models.CharField(max_length=500)
