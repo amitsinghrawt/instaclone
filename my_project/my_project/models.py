@@ -62,3 +62,9 @@ class CommentModel(models.Model):
 class swachh_bharat(models.Model):
         post = models.ForeignKey(PostModel)
         text = models.CharField(max_length=500)
+
+class UpvoteModel(models.Model):
+    user = models.ForeignKey(UserModel)
+    comment = models.ForeignKey(CommentModel)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)

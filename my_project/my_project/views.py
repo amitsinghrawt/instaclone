@@ -9,8 +9,8 @@ from django.utils import timezone
 from imgurpython import ImgurClient
 from settings import BASE_DIR
 
-from forms import SignUpFrom, LoginFrom, PostFrom, LikeFrom,CommentFrom
-from models import UserModel, Seccion_token, LikeModel, PostModel,CommentModel,swachh_bharat
+from forms import SignUpFrom, LoginFrom, PostFrom, LikeFrom,CommentFrom,UpvoteForm
+from models import UserModel, Seccion_token, LikeModel, PostModel,CommentModel,swachh_bharat,UpvoteModel
 from clarifai.rest import ClarifaiApp
 
 dirty_list=['garbage','waste','polluttion','junk','trash','litter','disposal']
@@ -103,9 +103,7 @@ def post_view(request):
                 client = ImgurClient("e86df9c6155435d", "b2d3db1d4409ce0edf07cf05d46eda64af25ac08")
                 post.image_url = client.upload_from_path(path, anon=True)['link']
                 swachh_bharat(post)
-                post.save()
-
-                return render(request, 'post.html', {'form': form, 'user': user})
+                return redirect('/feed/')
             else:
                 return render(request, 'post.html', {'form': form, 'user': user,'error':"Unable to Add Post"})
 
@@ -124,6 +122,28 @@ def like_view(request):
             else:
                 existing_like.delete()
             return redirect('/feed/')
+    else:
+        return redirect('/login/')
+
+def upvote_view(request):
+    user =check_validantion(request)
+
+    if request.method == 'POST':
+        form = UpvoteForm(request.POST)
+
+        if form.is_valid():
+            comment_id = form.cleaned_data.get('comment').id
+            existing_upvote = UpvoteModel.objects.filter(comment_id=comment_id, user=user).first()
+
+            if not existing_upvote:  # if comment is not upvoted by current user
+                UpvoteModel.objects.create(comment_id=comment_id, user=user)
+            else:
+                existing_upvote.delete()  # devote comment
+            return redirect('/feed/')
+
+        else:
+            return redirect('/login/')
+
     else:
         return redirect('/login/')
 
@@ -183,7 +203,7 @@ def swachh_bharat(post):
         if response["outputs"]:
             if response["outputs"][0]["data"]:
                 if response["outputs"][0]["data"]["concepts"]:
-                    for index in range(0, len(response["outputs"][0]["data"]["concepts"])):
+                     for index in range(0, len(response["outputs"][0]["data"]["concepts"])):
                         if response["outputs"][0]["data"]["concepts"][index]["name"] in dirty_list:
                             category = swachh_bharat(post=post,text=response["outputs"][0]["data"]["concepts"][index]["name"])
                             category.save()
